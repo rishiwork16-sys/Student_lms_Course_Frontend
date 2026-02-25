@@ -1,7 +1,7 @@
 // API base URL for live backend on AWS
-// For your domain learninglms.skilledUp.tech (GoDaddy), keep this pointing to AWS backend.
-// If you later put backend behind a domain (e.g. api.skilledup.tech), update this URL.
-const API_BASE = 'http://13.232.64.9:8092/api';
+// Note: Frontend and Backend are now on the same domain (via Nginx Proxy) to avoid Mixed Content errors.
+const API_BASE = 'https://studentworkspace.skilledup.tech/api';
+// const API_BASE = 'http://13.232.64.9:8092/api'; // Old IP-based URL
 
 async function fetchWithAuth(url, options = {}) {
     const token = localStorage.getItem('token');
