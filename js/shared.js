@@ -1,6 +1,5 @@
 // API base URL for live backend on AWS
-// Note: Frontend and Backend are now on the same domain (via Nginx Proxy) to avoid Mixed Content errors.
-const API_BASE = 'https://studentworkspace.skilledup.tech/api';
+const API_BASE = 'https://api.skilledup.tech/api';
 // const API_BASE = 'http://13.232.64.9:8092/api'; // Old IP-based URL
 
 async function fetchWithAuth(url, options = {}) {
