@@ -1,5 +1,5 @@
 // API base URL for live backend on AWS
-const API_BASE = 'https://api.skilledup.tech/api';
+const API_BASE = 'https://lmsapi.skilledup.tech/api';
 
 async function fetchWithAuth(url, options = {}) {
     const token = localStorage.getItem('token');
