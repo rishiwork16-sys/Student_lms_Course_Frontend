@@ -935,7 +935,7 @@ async function submitExam() {
 
 function logout() {
     localStorage.removeItem('token');
-    window.location.href = 'signin.html';
+    window.location.href = 'index.html';
 }
 
 // Scroll to courses section
