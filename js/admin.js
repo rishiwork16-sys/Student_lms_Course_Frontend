@@ -53,6 +53,39 @@ async function loadCourses() {
     }
 }
 
+// --- Student Management ---
+function openAddStudentModal() {
+    document.getElementById('addStudentModal').style.display = 'flex';
+    document.getElementById('addStudentForm').reset();
+}
+
+async function submitAddStudent(e) {
+    e.preventDefault();
+    const name = document.getElementById('addStudentName').value;
+    const phone = document.getElementById('addStudentPhone').value;
+    const email = document.getElementById('addStudentEmail').value;
+    const password = document.getElementById('addStudentPassword').value;
+
+    try {
+        const res = await fetchWithAuth('/admin/students', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone, email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert('Student added successfully!');
+            closeModal('addStudentModal');
+            loadStudents();
+        } else {
+            alert(data || 'Failed to add student');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Error connecting to server');
+    }
+}
+
 async function loadStudents() {
     try {
         const res = await fetchWithAuth('/admin/students');
@@ -60,12 +93,12 @@ async function loadStudents() {
         const grid = document.getElementById('studentsGrid');
         if (grid) {
             grid.innerHTML = students.map(s => `
-                <div class="course-card" onclick="viewStudentDetails(${s.id})">
-                    <img src="https://via.placeholder.com/300" alt="Avatar">
-                    <div class="info">
-                        <h4>${s.name || 'Unnamed'}</h4>
-                        <p>${s.email || ''}</p>
-                        <small>${s.phone || ''}</small>
+                <div class="course-card" onclick="viewStudentDetails(${s.id})" style="cursor:pointer;">
+                    <img src="../img/default-avatar.png" onerror="this.src='https://via.placeholder.com/150?text=Student'" alt="Avatar" style="width: 80px; height: 80px; border-radius: 50%; margin: 15px auto; object-fit: cover;">
+                    <div class="info" style="text-align: center;">
+                        <h4 style="margin: 0; font-size: 16px;">${s.name || 'Unnamed'}</h4>
+                        <p style="margin: 5px 0; color: #64748b; font-size: 13px;">${s.phone || ''}</p>
+                        <span style="font-size: 11px; background: #f1f5f9; padding: 2px 8px; border-radius: 10px;">View Profile</span>
                     </div>
                 </div>
             `).join('');
@@ -78,27 +111,81 @@ async function loadStudents() {
 async function viewStudentDetails(userId) {
     try {
         const res = await fetchWithAuth(`/admin/students/${userId}`);
-        if (!res.ok) {
-            alert('Failed to load student details');
-            return;
-        }
+        if (!res.ok) return alert('Failed to load student details');
         const d = await res.json();
+
+        document.getElementById('detailsStudentId').value = userId;
         const body = document.getElementById('studentDetailsBody');
-        if (body) {
-            const coursesList = (d.enrolledCourses || []).map((t, i) => `<li>${t} (${d.courseIds?.[i] ?? ''})</li>`).join('');
-            body.innerHTML = `
+
+        // Fetch detailed enrollments with titles
+        const enrollRes = await fetchWithAuth(`/admin/students/${userId}/enrollments`);
+        const enrollments = await enrollRes.json();
+
+        const enrollList = enrollments.length > 0
+            ? enrollments.map(e => `<li style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:6px; background:#f8fafc; border-radius:4px;">
+                <span>${e.courseTitle}</span>
+                <button onclick="removeEnrollment(${e.enrollmentId}, ${userId})" style="background:none; border:none; color:#ef4444; cursor:pointer;" title="Remove Access"><i class="fas fa-times-circle"></i></button>
+              </li>`).join('')
+            : '<p style="color:#94a3b8; font-style:italic;">No active courses</p>';
+
+        body.innerHTML = `
+            <div style="background:#f1f5f9; padding:15px; border-radius:8px; margin-bottom:15px;">
                 <div class="detail-row"><strong>Name:</strong> ${d.name || ''}</div>
                 <div class="detail-row"><strong>Email:</strong> ${d.email || ''}</div>
                 <div class="detail-row"><strong>Phone:</strong> ${d.phone || ''}</div>
-                <div class="detail-row"><strong>Address:</strong> ${d.address || ''}</div>
-                <div class="detail-row"><strong>Enrolled Courses:</strong></div>
-                <ul>${coursesList || '<li>No enrollments</li>'}</ul>
-            `;
-            document.getElementById('studentDetailsModal').style.display = 'flex';
+            </div>
+            <h3 style="font-size: 16px; margin-bottom: 10px;">Enrolled Courses</h3>
+            <ul style="list-style:none; padding:0;">${enrollList}</ul>
+        `;
+
+        document.getElementById('studentDetailsModal').style.display = 'flex';
+        loadAllCoursesForDropdown();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function loadAllCoursesForDropdown() {
+    try {
+        const res = await fetchWithAuth('/admin/courses');
+        const courses = await res.json();
+        const select = document.getElementById('courseAssignSelect');
+        select.innerHTML = '<option value="">-- Choose Course --</option>' +
+            courses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function assignCourseToStudent() {
+    const userId = document.getElementById('detailsStudentId').value;
+    const courseId = document.getElementById('courseAssignSelect').value;
+
+    if (!courseId) return alert('Please select a course');
+
+    try {
+        const res = await fetchWithAuth(`/admin/students/${userId}/courses/${courseId}`, { method: 'POST' });
+        if (res.ok) {
+            alert('Course assigned successfully!');
+            viewStudentDetails(userId); // Refresh details
+        } else {
+            const data = await res.text();
+            alert(data || 'Failed to assign course');
         }
     } catch (e) {
         console.error(e);
-        alert('Error loading student details');
+    }
+}
+
+async function removeEnrollment(enrollmentId, userId) {
+    if (!confirm('Are you sure you want to remove this course access?')) return;
+    try {
+        const res = await fetchWithAuth(`/admin/enrollments/${enrollmentId}`, { method: 'DELETE' });
+        if (res.ok) {
+            viewStudentDetails(userId); // Refresh
+        }
+    } catch (e) {
+        console.error(e);
     }
 }
 
@@ -110,7 +197,8 @@ function openCreateModal() {
     document.getElementById('courseTypeFree').checked = true;
     togglePriceFields();
 }
-function closeCreateModal() { document.getElementById('createModal').style.display = 'none'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function closeCreateModal() { closeModal('createModal'); }
 
 // Toggle price fields based on course type
 function togglePriceFields() {
@@ -1122,6 +1210,7 @@ if (window.location.pathname.endsWith('dashboard.html')) {
     loadStats();
     loadCourses();
     loadStudents();
+    loadPayments();
 }
 
 async function loadPayments() {
@@ -1289,7 +1378,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggle.addEventListener('click', (e) => {
             e.stopPropagation(); // Prevent immediate closing
             menu.classList.toggle('open');
-            
+
             // Update icon
             const icon = toggle.querySelector('i');
             if (menu.classList.contains('open')) {

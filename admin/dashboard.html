@@ -111,9 +111,12 @@
             </div>
         </details>
 
-        <details>
-            <summary class="section-header" style="cursor: pointer; list-style: none;">
+        <details id="studentsSection">
+            <summary class="section-header" style="cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;">
                 <h2>Students</h2>
+                <button class="btn-primary" onclick="openAddStudentModal(); event.stopPropagation();">
+                    <i class="fas fa-plus"></i> Add Student
+                </button>
             </summary>
             <div class="courses-grid" id="studentsGrid"></div>
         </details>
@@ -238,11 +241,50 @@
         </div>
     </div>
 
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <span class="close" onclick="closeModal('addStudentModal')">&times;</span>
+            <h2>Add New Student</h2>
+            <form id="addStudentForm" onsubmit="submitAddStudent(event)">
+                <div style="margin-bottom: 15px;">
+                    <label>Full Name *</label>
+                    <input type="text" id="addStudentName" placeholder="Enter student name" required style="width:100%;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label>Phone Number *</label>
+                    <input type="text" id="addStudentPhone" placeholder="Enter phone (e.g., 919876543210)" required style="width:100%;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label>Email Address</label>
+                    <input type="email" id="addStudentEmail" placeholder="student@example.com" style="width:100%;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label>Password</label>
+                    <input type="password" id="addStudentPassword" placeholder="Minimum 8 characters" style="width:100%;">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%;">Add Student</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Student Details Modal -->
     <div id="studentDetailsModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 500px;">
             <span class="close" onclick="closeModal('studentDetailsModal')">&times;</span>
-            <h2>Student Details</h2>
-            <div id="studentDetailsBody"></div>
+            <h2>Student Profile</h2>
+            <div id="studentDetailsBody" style="margin-bottom: 25px;"></div>
+            
+            <div style="border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                <h3 style="font-size: 16px; margin-bottom: 12px;">Assign New Course</h3>
+                <div style="display: flex; gap: 10px;">
+                    <select id="courseAssignSelect" style="flex: 1; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                        <option value="">Loading courses...</option>
+                    </select>
+                    <button class="btn-primary" onclick="assignCourseToStudent()">Assign</button>
+                </div>
+            </div>
+            <input type="hidden" id="detailsStudentId">
         </div>
     </div>
 

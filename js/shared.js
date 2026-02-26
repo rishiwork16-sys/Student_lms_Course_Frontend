@@ -1,6 +1,5 @@
 // API base URL for live backend on AWS
 const API_BASE = 'https://api.skilledup.tech/api';
-// const API_BASE = 'http://13.232.64.9:8092/api'; // Old IP-based URL
 
 async function fetchWithAuth(url, options = {}) {
     const token = localStorage.getItem('token');
