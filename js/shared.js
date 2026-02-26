@@ -25,7 +25,7 @@ async function fetchWithAuth(url, options = {}) {
         localStorage.removeItem('token');
         const path = window.location.pathname;
         if (path.includes('/admin/')) {
-            window.location.href = '/admin/login.html';
+            window.location.href = '/admin/signin.html';
         } else {
             window.location.href = '/student/home.html';
         }
