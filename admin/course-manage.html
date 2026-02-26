@@ -93,21 +93,120 @@
 
     <!-- Edit Course Modal -->
     <div id="editCourseModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 600px;">
             <span class="close" onclick="closeModal('editCourseModal')">&times;</span>
-            <h3>Edit Course</h3>
-            <label>Course Title</label>
-            <input type="text" id="editCourseTitle" placeholder="Course Title" required>
-            <label>Description</label>
-            <textarea id="editCourseDesc" rows="4" placeholder="Description"></textarea>
-            <label>Price</label>
-            <input type="number" id="editCoursePrice" placeholder="Price">
-            <label>Status</label>
-            <select id="editCourseActive">
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-            </select>
-            <button onclick="submitCourseEdit()" class="btn-primary">Update Course</button>
+            <h2>Edit Course</h2>
+            <form id="editCourseForm" onsubmit="event.preventDefault(); submitCourseEdit();">
+                <!-- Basic Info -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Course Title *</label>
+                    <input type="text" id="editCourseTitle" placeholder="Course Title" required style="width: 100%;">
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Description</label>
+                    <textarea id="editCourseDesc" placeholder="Brief description" rows="3"
+                        style="width: 100%;"></textarea>
+                </div>
+
+                <!-- Duration -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Duration (Months) *</label>
+                    <input type="number" id="editCourseDuration" placeholder="e.g., 6" min="1" required
+                        style="width: 100%;">
+                </div>
+
+                <!-- Course Type -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Course Type *</label>
+                    <div style="display: flex; gap: 20px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="editCourseType" value="free" id="editCourseTypeFree"
+                                onchange="toggleEditPriceFields()">
+                            <span style="margin-left: 8px;">Free Course</span>
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="editCourseType" value="paid" id="editCourseTypePaid"
+                                onchange="toggleEditPriceFields()">
+                            <span style="margin-left: 8px;">Paid Course</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Price Fields -->
+                <div id="editPriceFields"
+                    style="display: none; margin-bottom: 15px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 500;">MRP (₹) *</label>
+                            <input type="number" id="editCourseMrp" placeholder="999" min="0" step="0.01"
+                                oninput="calculateEditDiscount()" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 500;">Selling Price (₹)
+                                *</label>
+                            <input type="number" id="editCoursePrice" placeholder="499" min="0" step="0.01"
+                                oninput="calculateEditDiscount()" style="width: 100%;">
+                        </div>
+                    </div>
+                    <div id="editDiscountDisplay" style="color: #10b981; font-weight: 600; font-size: 14px;"></div>
+                </div>
+
+                <!-- Category & Language -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Category</label>
+                        <select id="editCourseCategory"
+                            style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                            <option value="">Select Category</option>
+                            <option value="Programming">Programming</option>
+                            <option value="Data Science">Data Science</option>
+                            <option value="Web Development">Web Development</option>
+                            <option value="Mobile Development">Mobile Development</option>
+                            <option value="Design">Design</option>
+                            <option value="Business">Business</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Language</label>
+                        <select id="editCourseLanguage"
+                            style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                            <option value="">Select Language</option>
+                            <option value="English">English</option>
+                            <option value="Hindi">Hindi</option>
+                            <option value="Hinglish">Hinglish</option>
+                            <option value="Tamil">Tamil</option>
+                            <option value="Telugu">Telugu</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Instructor -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Instructor Name</label>
+                    <input type="text" id="editCourseInstructor" placeholder="e.g., John Doe" style="width: 100%;">
+                </div>
+
+                <!-- Thumbnail -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Update Thumbnail
+                        (Optional)</label>
+                    <input type="file" id="editCourseThumbnail" accept="image/*" style="width: 100%;">
+                </div>
+
+                <!-- Status -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="editCourseActive">
+                        <span style="margin-left: 8px;">Course is Active</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%;">Update Course</button>
+            </form>
         </div>
     </div>
 

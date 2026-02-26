@@ -246,6 +246,20 @@ function togglePriceFields() {
     }
 }
 
+function toggleEditPriceFields() {
+    const isPaid = document.getElementById('editCourseTypePaid').checked;
+    const priceFields = document.getElementById('editPriceFields');
+    if (isPaid) {
+        priceFields.style.display = 'block';
+        document.getElementById('editCourseMrp').required = true;
+        document.getElementById('editCoursePrice').required = true;
+    } else {
+        priceFields.style.display = 'none';
+        document.getElementById('editCourseMrp').required = false;
+        document.getElementById('editCoursePrice').required = false;
+    }
+}
+
 // Calculate and display discount percentage
 function calculateDiscount() {
     const mrp = parseFloat(document.getElementById('courseMrp').value) || 0;
@@ -258,6 +272,19 @@ function calculateDiscount() {
     } else if (price > mrp && mrp > 0) {
         discountDisplay.textContent = '⚠️ Selling price is higher than MRP';
         discountDisplay.style.color = '#ef4444';
+    } else {
+        discountDisplay.textContent = '';
+    }
+}
+
+function calculateEditDiscount() {
+    const mrp = parseFloat(document.getElementById('editCourseMrp').value) || 0;
+    const price = parseFloat(document.getElementById('editCoursePrice').value) || 0;
+    const discountDisplay = document.getElementById('editDiscountDisplay');
+
+    if (mrp > 0 && price > 0 && price < mrp) {
+        const discount = ((mrp - price) / mrp * 100).toFixed(0);
+        discountDisplay.textContent = `🎉 ${discount}% OFF (Save ₹${(mrp - price).toFixed(2)})`;
     } else {
         discountDisplay.textContent = '';
     }
@@ -1095,27 +1122,62 @@ async function confirmDelete() {
 
 function editCourse() {
     if (!currentCourseData) return;
-    document.getElementById('editCourseTitle').value = currentCourseData.title;
-    document.getElementById('editCourseDesc').value = currentCourseData.description || '';
-    document.getElementById('editCoursePrice').value = currentCourseData.price;
-    document.getElementById('editCourseActive').value = currentCourseData.active ? 'true' : 'false';
+    const d = currentCourseData;
+
+    document.getElementById('editCourseTitle').value = d.title || '';
+    document.getElementById('editCourseDesc').value = d.description || '';
+    document.getElementById('editCourseDuration').value = d.duration || '';
+    document.getElementById('editCourseCategory').value = d.category || '';
+    document.getElementById('editCourseLanguage').value = d.language || '';
+    document.getElementById('editCourseInstructor').value = d.instructor || '';
+    document.getElementById('editCourseActive').checked = d.active;
+
+    if (d.price && d.price > 0) {
+        document.getElementById('editCourseTypePaid').checked = true;
+        document.getElementById('editCoursePrice').value = d.price;
+        document.getElementById('editCourseMrp').value = d.mrp || d.price;
+    } else {
+        document.getElementById('editCourseTypeFree').checked = true;
+    }
+
+    toggleEditPriceFields();
+    calculateEditDiscount();
     document.getElementById('editCourseModal').style.display = 'flex';
 }
 
 async function submitCourseEdit() {
     const title = document.getElementById('editCourseTitle').value;
     const description = document.getElementById('editCourseDesc').value;
-    const price = document.getElementById('editCoursePrice').value;
-    const active = document.getElementById('editCourseActive').value === 'true';
+    const duration = document.getElementById('editCourseDuration').value;
+    const category = document.getElementById('editCourseCategory').value;
+    const language = document.getElementById('editCourseLanguage').value;
+    const instructor = document.getElementById('editCourseInstructor').value;
+    const active = document.getElementById('editCourseActive').checked;
+    const isPaid = document.getElementById('editCourseTypePaid').checked;
+    const file = document.getElementById('editCourseThumbnail').files[0];
 
-    const formData = new FormData();
-    const priceVal = parseFloat(price);
-    formData.append('course', JSON.stringify({
+    let price = 0;
+    let mrp = 0;
+    if (isPaid) {
+        price = parseFloat(document.getElementById('editCoursePrice').value) || 0;
+        mrp = parseFloat(document.getElementById('editCourseMrp').value) || 0;
+    }
+
+    const courseData = {
         title,
         description,
-        price: isNaN(priceVal) ? null : priceVal,
+        duration: parseInt(duration),
+        price,
+        mrp,
+        category: category || null,
+        language: language || null,
+        instructor: instructor || null,
         active
-    }));
+    };
+
+    const formData = new FormData();
+    formData.append('course', JSON.stringify(courseData));
+    if (file) formData.append('thumbnail', file);
 
     try {
         const res = await fetchWithAuth(`/admin/courses/${currentCourseId}`, {
@@ -1125,10 +1187,11 @@ async function submitCourseEdit() {
 
         if (res.ok) {
             closeModal('editCourseModal');
-            loadCourseDetails(currentCourseId);
+            await loadCourseDetails(currentCourseId);
             alert('Course updated successfully!');
         } else {
-            alert('Failed to update course');
+            const error = await res.text();
+            alert('Failed to update course: ' + error);
         }
     } catch (e) {
         console.error(e);
