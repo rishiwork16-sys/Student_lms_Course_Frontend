@@ -134,6 +134,13 @@ async function viewStudentDetails(userId) {
                 <div class="detail-row"><strong>Email:</strong> ${d.email || ''}</div>
                 <div class="detail-row"><strong>Phone:</strong> ${d.phone || ''}</div>
             </div>
+
+            <div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
+                <button onclick="deleteStudentAccount(${userId})" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; padding:6px 12px; border-radius:6px; font-size:13px; cursor:pointer;">
+                    <i class="fas fa-trash-alt"></i> Delete Student Account
+                </button>
+            </div>
+
             <h3 style="font-size: 16px; margin-bottom: 10px;">Enrolled Courses</h3>
             <ul style="list-style:none; padding:0;">${enrollList}</ul>
         `;
@@ -186,6 +193,29 @@ async function removeEnrollment(enrollmentId, userId) {
         }
     } catch (e) {
         console.error(e);
+    }
+}
+
+async function deleteStudentAccount(userId) {
+    if (!confirm('WARNING: Are you sure you want to PERMANENTLY delete this student account? All their data and course access will be lost.')) return;
+
+    try {
+        const res = await fetchWithAuth(`/admin/students/${userId}`, {
+            method: 'DELETE'
+        });
+
+        if (res.ok) {
+            alert('Student account deleted successfully');
+            closeModal('studentDetailsModal');
+            loadStudents();
+            loadStats(); // Update user count
+        } else {
+            const err = await res.text();
+            alert(err || 'Failed to delete student');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Error connecting to server');
     }
 }
 
